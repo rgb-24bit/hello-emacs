@@ -1,0 +1,5 @@
+#+TITLE: elisp
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents
+  - [[file:load-file.org][加载文件的三种方式]]

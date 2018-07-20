@@ -1,0 +1,37 @@
+#+TITLE: 加载文件的三种方式
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#load][load]]
+- [[#require][require]]
+- [[#autoload][autoload]]
+
+* load
+  ~load~ 是加载文件的一般功能， 函数原型如下：
+  #+BEGIN_SRC elisp
+    (load FILE &optional NOERROR NOMESSAGE NOSUFFIX MUST-SUFFIX)
+  #+END_SRC
+
+  通常情况下 ~FILE~ 就足够了， 比如：
+  #+BEGIN_SRC elisp
+    (load "config")
+  #+END_SRC
+
+  会按照顺序尝试加载： ~config.elc~, ~config.el~ 和 ~config~.
+
+* require
+  ~require~ 会尝试加载一个 *未加载* 的包， 函数原型如下：
+  #+BEGIN_SRC elisp
+    (require FEATURE &optional FILENAME NOERROR)
+  #+END_SRC
+
+  ~require~ 会检查 ~FEATURE~ 是否存在， 如果不存在就会调用 ~load~ 来加载它。
+
+* autoload
+  ~autoload~ 仅在调用函数是加载文件， 函数原型如下：
+  #+BEGIN_SRC elisp
+    (autoload FUNCTION FILE &optional DOCSTRING INTERACTIVE TYPE)
+  #+END_SRC
+
+  ~FUNCTION~ 和 ~FILE~ 相关联， 当调用 ~FUNCTION~ 时， 加载文件并运行函数。
+  
