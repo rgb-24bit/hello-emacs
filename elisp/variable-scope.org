@@ -1,0 +1,104 @@
+#+TITLE: 变量作用域
+#+AUTHOR: DarkSun, rgb-24bit
+
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#缓冲区局部变量][缓冲区局部变量]]
+  - [[#make-variable-buffer-local][make-variable-buffer-local]]
+  - [[#make-local-variable][make-local-variable]]
+  - [[#缓冲区相关函数][缓冲区相关函数]]
+  - [[#文件局部变量列表][文件局部变量列表]]
+- [[#变量本地化][变量本地化]]
+
+* 缓冲区局部变量
+** make-variable-buffer-local
+   ~make-variable-buffer-local~ 绑定指定变量或符号到当前缓冲区， 该缓冲区中对绑定的变量
+   的修改 *会影响* 到其他缓冲区。
+
+   #+BEGIN_SRC elisp
+     (make-variable-buffer-local VARIABLE)
+   #+END_SRC
+
+** make-local-variable
+   ~make-local-variable~ 绑定指定变量或符号到当前缓冲区， 该缓冲区中对绑定的变量的修改
+   *不会* 影响到其他缓冲区， 推荐使用。
+
+   #+BEGIN_SRC elisp
+     (make-local-variable VARIABLE)
+   #+END_SRC
+
+** 缓冲区相关函数
+   #+BEGIN_SRC elisp
+     ;; BODY 表达式在 BUFFER-OR-NAME 指定的缓冲区中执行
+     (with-current-buffer BUFFER-OR-NAME &rest BODY)
+
+     ;; 得到指定缓冲区的缓冲区对象， 如果指定的缓冲区不存在就返回 nil
+     (get-buffer BUFFER-OR-NAME)
+
+     ;; 获取指定符号的默认值
+     (default-value SYMBOL)
+
+     ;; 修改指定符号的默认值
+     (setq-default [VAR VALUE]...)
+
+     ;; 判断变量是否是缓冲区局部变量
+     (local-variable-p VARIABLE &optional BUFFER)
+
+     ;; 获取其他缓冲区的局部变量值
+     (buffer-local-value VARIABLE BUFFER)
+
+     ;; 判断符号是否有全局默认值
+     (default-boundp SYMBOL)
+
+     ;; 使一个符号的值重新为空
+     (makunbound SYMBOL)
+
+     ;; 清除一个缓冲区局部变量
+     (kill-local-variable VARIABLE)
+
+     ;; 清除所有不带 permanent-local 属性的缓冲区局部变量
+     (kill-all-local-variables)
+   #+END_SRC
+
+** 文件局部变量列表
+   官方文档链接： [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][Specifying File Variables]]
+
+   在任意文件的结尾位置可以通过如下形式的文本指定 *局部变量列表*:
+   #+BEGIN_EXAMPLE
+       Local variables:
+       var1 : value1
+       var2 : value2
+       ...
+       eval : form1
+       eval : form2
+       ...      
+       End:
+   #+END_EXAMPLE
+
+   ~form~ 中的代码会自动执行， 比如：
+   #+BEGIN_EXAMPLE
+     Local Variables:
+     name: "joe"
+     eval: (insert name)
+     End:
+   #+END_EXAMPLE
+
+   在代码文件的末尾可以使用对应语言的 *注释* 包裹 *文件局部变量列表*, 比如 *C 语言* 的：
+   #+BEGIN_SRC C
+     /* Local Variables: */
+     /* name: "joe" */
+     /* eval: (insert name) */
+     /* End: */
+   #+END_SRC
+
+   可以通过在配置文件中添加以下代码来阻止 *局部变量列表* 自动生效：
+   #+BEGIN_SRC elisp
+     (setq enable-local-variables 'query)
+   #+END_SRC
+
+* 变量本地化
+  + 普通变量可以通过 ~make-local-variable~ 或 ~make-variables-buffer-local~ 变为 ~buffer-local~ 的
+  + ~make-variables-buffer-local~ 使指定的变量在每个 ~buffer~ 中都是独立的
+  + ~make-local-variables~ 使变量在当前 ~buffer~ 是独立的， 而在其他 ~buffer~ 依然共享全局变量
+  + ~hook~ 变量智能通过 ~make-local-hook~ 变为 ~buffer-local~ 的
+

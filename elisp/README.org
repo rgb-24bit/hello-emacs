@@ -4,3 +4,4 @@
 * Table of Contents
   - [[file:load-file.org][加载文件的三种方式]]
   - [[file:after-load.org][推迟代码执行]]
+  - [[file:variable-scope.org][变量作用域]]

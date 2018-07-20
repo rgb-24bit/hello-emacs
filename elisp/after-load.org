@@ -11,7 +11,7 @@
     (eval-after-load FILE FORM)
   #+END_SRC
 
-  其中， ~FILE~ 是需要被加载的对象， 而 ~FROM~ 则是 ~FILE~ 被加载后要执行的代码。
+  其中， ~FILE~ 是需要被加载的对象， 而 ~FORM~ 则是 ~FILE~ 被加载后要执行的代码。
 
   加载 ~foo~ 后执行 ~progn~ 中的代码
   #+BEGIN_SRC elisp
