@@ -1,0 +1,36 @@
+#+TITLE: 推迟代码执行
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#eval-after-load][eval-after-load]]
+- [[#with-eval-after-load][with-eval-after-load]]
+
+* eval-after-load
+  ~eval-after-load~ 允许在指定的对象加载后执行一段代码， 函数原型为：
+  #+BEGIN_SRC elisp
+    (eval-after-load FILE FORM)
+  #+END_SRC
+
+  其中， ~FILE~ 是需要被加载的对象， 而 ~FROM~ 则是 ~FILE~ 被加载后要执行的代码。
+
+  加载 ~foo~ 后执行 ~progn~ 中的代码
+  #+BEGIN_SRC elisp
+    (eval-after-load "foo"
+      '(progn
+         (setq foo 42)
+         (setq bar 17)))
+  #+END_SRC
+
+* with-eval-after-load
+  ~with-eval-after-load~ 类似 ~eval-after-load~, 但更加强大， 函数原型为：
+  #+BEGIN_SRC elisp
+    (with-eval-after-load FILE &rest BODY)
+  #+END_SRC
+
+  前面 ~eval-after-load~ 中例子的等价实现：
+  #+BEGIN_SRC elisp
+    (with-eval-after-load "foo"
+      (setq foo 42)
+      (setq bar 17))
+  #+END_SRC
+
