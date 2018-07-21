@@ -1,0 +1,232 @@
+#+TITLE: 数据类型
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#number][Number]]
+  - [[#integer][Integer]]
+  - [[#float][Float]]
+- [[#sequence][Sequence]]
+  - [[#array][Array]]
+    - [[#vector][vector]]
+    - [[#bool-vector][bool-vector]]
+    - [[#char-tables][char-tables]]
+    - [[#string][string]]
+  - [[#list][List]]
+    - [[#association-list--alist][association list / alist]]
+    - [[#property-list--plist][Property list / plist]]
+- [[#hashtable][hashtable]]
+
+* Number
+** Integer
+   ~Integer~ 的取值范围由变量 ~most-positive-fixnum~ 和 ~most-negative-fixnum~ 指定， 任何超过
+   ~Integer~ 范围的值都认为是 ~Float~ 型。
+
+   ~Integer~ 默认用 ~10~ 进制数表示， 但也可以用：
+   + ~#bNNNN~ 表示二进制数
+   + ~#oNNNN~ 表示八进制数
+   + ~#xNNNN~ 表示十六进制数
+   + ~#MrNNNN~ 表示 ~M~ 进制的数
+
+** Float
+   ~Elisp~ 中 ~Float~ 的取值范围与 ~C~ 中的 ~double~ 型一样。
+
+   ~Float~ 使用 ~INF~ 表示无穷大， 使用 ~NaN~ 表示非数。
+   #+BEGIN_SRC elisp
+     (/ 0 0.0)    ; -0.0e+NaN
+     (/ -0 0.)    ; -0.0e+NaN
+     (/ 1 0.0)    ; 1.0e+INF
+     (/ -1 0.0)   ; -1.0e+INF
+   #+END_SRC
+
+   *相关函数*:
+   #+BEGIN_SRC elisp
+     ;; 判断是否为 NAN
+     (isnan X)
+
+     ;; 返回一个元组 (S .E), 使得 S * 2^E = X, S 的值在 [0.5, 1) 之间
+     (frexp X)
+
+     ;; 返回 Float 值 X, 使得 X = S * 2^E
+     (ldexp S E)
+
+     ;; 假设 X1 = S1 * 2^E1, X2 = S2 * 2^E2, 则返回 S1 * 2^E2 的值
+     (copysign X1 X2)
+
+     ;; 返回 log2(x) 的值， 向下取整
+     (logb X)
+   #+END_SRC
+
+* Sequence
+  通过函数 ~length~ 可以获取序列的长度：
+  #+BEGIN_SRC elisp
+    (length SEQUENCE)
+  #+END_SRC
+
+  需要注意的是 ~length~ 不能对点列表和环形列表求长度， 但可以使用 ~safe-length~ 代替：
+  #+BEGIN_SRC elisp
+    (safe-length LIST)
+  #+END_SRC
+
+** Array
+   除了 ~char-table~ 之外， 创建其他类型的 ~Array~ 都需要指定一个固定长度。
+
+   ~char-table~ 的长度是由 ~character code~ 的范围所确定的， 不能人工指定。
+
+*** vector
+   ~vector~ 是 ~sequence~ 的一个子类型。
+
+   + 创建 ~vector~ 的两种方式：
+     #+BEGIN_SRC elisp
+       ;; 使用字面量语法 [val1 val2 val3 ...]
+       [1 2 3 4 "23"]
+
+       ;; 使用函数 (vector &rest OBJECTS)
+       (vector 1 2 3 4 "23")
+     #+END_SRC
+
+   + 获取 ~vector~ 的长度：
+     #+BEGIN_SRC elisp
+       (length vector-obj)
+     #+END_SRC
+
+   + 获取设置 ~element~:
+     #+BEGIN_SRC elisp
+       ;; 通过 index 获取 element
+       (elt SEQUENCE N)
+
+       ;; 通过 index 设置 element
+       (aset ARRAY INDEX NEWELT)
+     #+END_SRC
+
+   + 将多个 ~sequence~ 组合成一个 ~vector~:
+     #+BEGIN_SRC elisp
+       (vconcat seq1 seq2 ...)
+     #+END_SRC
+
+   + 将 ~vector~ 转换成 ~list~
+     #+BEGIN_SRC elisp
+       (append vector-obj nil)
+     #+END_SRC
+  
+*** bool-vector
+    ~bool-vector~ 只能存放 ~nil~ 或 ~t~, 使用函数 ~make-bool-vector~ 创建：
+    #+BEGIN_SRC elisp
+      (make-bool-vector LENGTH INIT)
+    #+END_SRC
+
+    ~make-bool-vector~ 会使用 ~INIT~ 来初始化每一个 ~element~, 如：
+    #+BEGIN_SRC elisp
+      (make-bool-vector 6 t)
+    #+END_SRC
+
+    上述代码的输出为：
+    #+BEGIN_EXAMPLE
+      #&6"?"
+    #+END_EXAMPLE
+    
+    其中， ~#&6~ 标识了 ~bool-vector~ 的 *长度*, 而 ~(make-bool-vector 6 t)~ 的代表的是类似
+    #+BEGIN_SRC elisp
+      [t t t t t t]
+    #+END_SRC
+
+    的 ~vector~.
+
+    按照 ~t => 1, nil => 0~ 的方式翻译这个 ~vector~ 可以得到二进制串 ~111111~, 对应 ~ASCII~ 字符 ~?~.
+
+*** char-tables
+    + ~char-tables~ 类似 ~vector~, 但它使用 ~Character~ 作为索引
+    + ~char-tables~ 的输出格式和 ~vector~ 类似， 但前面加上 ~#^~ 作为标识
+    + 每个 ~char-table~ 对象都有一个 ~symbol~ 类型的 ~subtype~, 可以用于标识 ~char-table~ 的用处, 使用函数 ~char-table-subtyple~ 来查询该 ~subtype~
+    + ~char-table~ 的 ~subtype~ 中的属性 ~char-table-extra-slots~ 决定了该 ~char-table~ 的扩展 ~slot~ 的个数(0-10之间)
+    + 每个 ~char-table~ 都可以有一个父 ~char-table~, 子 ~char-table~ 从父 ~char-table~ 中继承索引的值.
+    + ~char-table~ 还能够设定一个默认值. 若发现 ~char-table~ 指定 ~index~ 的值为 ~nil~, 则返回该默认值.
+
+*** string
+    + ~elisp~ 中 ~string~ 是不可变的
+    + ~string~ 不能包含 ~?\H-N ?\A-N ?\s-N~ 这些字符
+    + ~string~ 可以包含文本属性， 包含文本属性的输出格式为：
+      #+BEGIN_SRC elisp
+        #("characters" property-data...)
+      #+END_SRC
+    + ~elisp~ 中， 对字符串比较的函数只有 ~string=~ 和 ~string<~, 没有 ~string>~
+
+** List
+   ~list~ 是 ~sequence~ 的一个子类型， 相关的操作：
+   #+BEGIN_SRC elisp
+     ;; 使用字面表单式创建 list '(v1 v2 v3 ...)
+     '(1 2 3)
+
+     ;; 使用 list 函数创建 list (list v1 v2 v3)
+     (list 1 2 3)
+
+     ;; 获取 element
+     (car (list 1 2 3))  ; => 1, 第一个元素
+     (nth 2 (list 1 2 3))  ; => 3, 第 n 个元素
+     (car (last (list 1 2 3)))  ; => 3, 最后一个元素
+     (cdr (list 1 2 3))  ; => (2, 3), 第二个到最后一个元素
+     (nthcdr 2 (list 1 2 3))  ; => (3), 第 n 个到最后一个元素
+     (butlast (list 1 2 3) 2)  ; => (1), 除最后 n 个元素
+
+     ;; 获取 list 的长度
+     (length list-obj)
+
+     ;; 在 list 开头添加 element
+     (cons element list-obj)
+
+     ;; 合并两个 list
+     (append list1 list2)
+
+     ;; 在 list 尾部添加 element
+     (append list-obj (list element))
+
+     ;; 修改 list
+     (pop PLACE)  ; 移除并返回第一个元素
+     (nbutlast LIST &optional N)  ; 移除最后 N 个元素
+     (setcar LIST x)  ; 替换第一个元素为指定 x
+     (setcdr LIST x)  ; 替换第二个到最后一个元素为 x
+   #+END_SRC
+
+*** association list / alist
+    ~alist~ 记录了 ~key~ 到 ~value~ 的关联， 每一个 ~cell~ 的 ~car~ 部分为 ~key~, 而 ~cdr~ 部分为 ~value~.
+
+    比如一下 ~alist~, ~key~ 分别为 ~a~ 和 ~b~, 而 ~value~ 为 ~1~ 和 ~(2 3)~:
+    #+BEGIN_SRC elisp
+      ((a . 1) ("b" 2 3))
+    #+END_SRC
+
+    通常的结构为：
+    #+BEGIN_SRC elisp
+      '((key value) (key value) ...)
+    #+END_SRC
+
+    + [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Association-Lists.html][官方文档]]
+
+*** Property list / plist
+    ~plist~ 的作用类似 ~alist~, 也是用 ~list~ 表示一组键值对。
+
+    ~plist~ 的 ~key~ 为 ~symbol~, 结构为：
+    #+BEGIN_SRC elisp
+      ;; 键值对的对应关系为 key1 -> value1; key2 -> '(value2); key3 -> "value3"
+      (key1 value1 key2 (value2) key3 "value3")
+    #+END_SRC
+
+    每一个 ~symbol~ 都可以 ~attach~ 一个 ~plist~.
+
+	  需要注意的是, ~plist~ 中的 *key必须是唯一的*, 相比来说 ~alist~ 就没有这个限制了.
+
+    + [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Property-Lists.html#Property-Lists][官方文档]]
+
+* hashtable
+  ~hash table~ 类似 ~alist~ 一样提供了键值配对的功能。 但比起 ~alist~ 来说, 有如下三个方面的不同：
+  + 在搜索大量的键值对集合时, 使用 ~hash table~ 的搜索速度比 ~alist~ 快得多
+  + ~hash table~ 中的的 ~item~ 是非排序的， 不能有重复键值
+  + 两个 ~hash table~ 对象无法共享同一个结构体, 而两个 ~alist~ 对象之间有可能使用共同的 ~tail~
+
+  ~hash table~ 的输出格式以 ~#s~ 开头后接 ~hash table~ 的属性和内容
+  #+BEGIN_EXAMPLE
+    #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8 data
+                  ())
+  #+END_EXAMPLE
+   
+  + [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Hash-Tables.html#Hash-Tables][官方文档]]
+
