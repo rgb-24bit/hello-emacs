@@ -15,6 +15,17 @@
     - [[#association-list--alist][association list / alist]]
     - [[#property-list--plist][Property list / plist]]
 - [[#hashtable][hashtable]]
+- [[#symbol][symbol]]
+  - [[#符号的组成][符号的组成]]
+  - [[#符号的形成][符号的形成]]
+  - [[#符号的引用][符号的引用]]
+- [[#char][Char]]
+  - [[#control-characters][Control characters]]
+  - [[#meta-character][Meta Character]]
+  - [[#shift-character][Shift Character]]
+  - [[#alt-character][Alt Character]]
+  - [[#hyper-character][Hyper Character]]
+  - [[#super-character][Super Character]]
 
 * Number
 ** Integer
@@ -229,4 +240,147 @@
   #+END_EXAMPLE
    
   + [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Hash-Tables.html#Hash-Tables][官方文档]]
+
+* symbol
+  在 ~elisp~ 中 ~symbol~ 的概念和其他语言中的 *变量* 类似， 但是在 ~elisp~ 中， 一个符号除了 *值* 以外， 还可以有函数。
+
+  即： 一个 ~symbol~ 可以同时求值和当做函数使用
+
+  如果列表的第一个表达式如果是一个符号， 解释器会查找这个表达式的函数值。 如果函数值是另一个符号， 则会继续查找这个符号的函数值。
+
+  任何字符都可以使用 ~\~ 转义后用在 ~symbol~ 的定义中， 但是和字符串里字符表示不同， ~\~ 转义后只是表示其后的字符， 比如 ~\t~ 代表的字符 ~t~, 而不是制表符。
+
+  如果要在符号名里使用制表符， 必须在 ~\~ 后加上制表符本身。
+  #+BEGIN_SRC elisp
+    (setq \  10)       ; \空格
+    (message "%d" \ )  ;"10"
+  #+END_SRC
+  
+  *PS:* ~elisp~ 中可以用来定义 ~symbol~ 的字符范围真的是很宽广， 基本上各种字符都可以， 包括 =~_!@$%^&amp;:<>{}?= 等字符。
+
+** 符号的组成
+   + 符号的名称 ::
+     + 函数 ~symbol-name~ 可以用于获取一个符号的名称
+
+   + 符号的值 ::
+     + 函数 ~symbol-value~ 可以用于获取一个符号的值
+     + 函数 ~boundp~ 可以用于测试符号是否有值
+     + 以 ~:~ 开头的符号的值不能修改
+ 
+   + 符号的函数 ::
+     + 函数 ~symbol-function~ 可以用于获取一个符号的函数
+     + 函数 ~fboundp~ 可以用于测试符号是否设置了函数
+     + 符号的 ~function slot~ 除了存放 ~function~ 外， 还可以存放 ~macro~, ~symbol~, ~keyboard~ ~marcro~, ~keymap~, ~autoload object~
+ 
+   + 符号的属性列表
+     + 函数 ~symbol-plist~ 可以用于获取一个符号的属性列表
+     + 可以使用 ~get/put~ 来 *访问/修改* 某个属性值
+     + 可以使用 ~plist-get/plist-put~ 来 *访问/设置* 属性列表中的属性
+     + 属性列表是一个形如 ~(prop1 value1 prop2 value2)~ 的关联列表， 但无法删除一个属性
+     + 可以使用属性列表来存储 ~function~ 的状态
+
+** 符号的形成
+   当 ~elisp~ 读取到一个 ~symbol~ 时， 它会先在一个名为 ~obarray~ 的 ~vector~ 中检查是否已经存在这个 ~symbol~, 若不存在， 
+   则 ~elisp reader~ 创建新的 ~symbol~ 并添加到 ~obarray~ 中 (创建并添加 ~symbol~ 的过程被成为 ~interning~, 而该 ~symbol~ 被称为是 ~interned symbol~).
+
+   如果想避免 ~intern~ 一个 ~symbol~, 可以在符号名前加上 ~#:~, 这些符号被称为 ~uninterned symbols~.
+   #+BEGIN_SRC elisp
+     (intern-soft "abc") ; => nil
+     'abc ; => abc
+     (intern-soft "abc") ; => abc
+     (intern-soft "abcd") ; => nil
+     '#:abcd ; => abcd
+     (intern-soft "abcd") ; => nil
+   #+END_SRC
+	
+   ~obarray~ 也是一种类型名称。
+
+   由于在 ~elisp~ 中, ~obarray~ 就是一个 ~vector~, 因此可以使用 ~(make-vecotr LENGTH 0)~ 来创建一个空的 ~obarray~,
+   而要把 ~symbol~ 插入一个 ~obarray~, 则必须使用如下的 ~intern~ 系列函数来进行。
+
+   #+BEGIN_SRC elisp
+     (intern STRING &optional OBARRAY)
+     (intern-soft NAME &optional OBARRAY)
+     (unintern NAME OBARRAY)
+     (mapatoms FUNCTION &optional OBARRAY)
+   #+END_SRC
+
+** 符号的引用
+   默认情况下， ~elisp~ 会对一个符号进行求值操作， 如果要引用符号本身， 可以使用函数 ~quote~:
+   #+BEGIN_SRC elisp
+     (quote ARG)
+   #+END_SRC
+   
+   以下两种书写方式是等价的：
+   #+BEGIN_SRC elisp
+     (quote x)
+     'x
+   #+END_SRC
+   
+   使用例：
+   #+BEGIN_SRC elisp
+     (setq foo (make-vector 10 0))  ; => [0 0 0 0 0 0 0 0 0 0]
+     (symbolp foo)  ; => nil
+     (symbolp (quote foo))  ; => t
+     (symbolp 'foo)  ; => t
+   #+END_SRC
+
+* Char
+  类似 ~C~, ~Elisp~ 中的 ~Char~ 其实就是 ~integer~ (值从 0 到 (max-char) 的范围都可以认为是 character). ~Char~ 类型的 *字面量结构* 为 ~? 字母~, 例如：
+  #+BEGIN_SRC elisp
+    (message "%d" ?A)      ; 65
+    (message "%d" ?\.)     ; 46 标点一般在前面加 \
+    (message "%d" ?我)     ; 25105
+
+    ?\a  ;=> 7                 ; control-g, `C-g'
+    ?\b  ;=> 8                 ; backspace, <BS>, `C-h'
+    ?\t  ;=> 9                 ; tab, <TAB>, `C-i'
+    ?\n  ;=> 10                ; newline, `C-j'
+    ?\v  ;=> 11                ; vertical tab, `C-k'
+    ?\f  ;=> 12                ; formfeed character, `C-l'
+    ?\r  ;=> 13                ; carriage return, <RET>, `C-m'
+    ?\e  ;=> 27                ; escape character, <ESC>, `C-['
+    ?\s  ;=> 32                ; space character, <SPC>
+    ?\\  ;=> 92                ; backslash character, `\'
+    ?\d  ;=> 127               ; delete character, <DEL>
+    ?\uNNNN                    ; 这里 N 为 16 进制数, 表示 U+NNNN 的 Unicode 字符
+    ?\U00NNNNNN                ;
+
+    ?\x十六进制代码            ; ?\x41 = \?A
+    ?\三个八进制代码           ; ?\001 = `C-a`
+  #+END_SRC
+
+  + 没有 ~charp~, 因为字符就是整数, 但是有 ~char-or-string-p~ 函数
+  + 使用 ~char-equal~ 比较字符时, 需要注意 ~case-fold-search~ 变量的值, ~t~ 表示忽略大小写
+
+** Control characters
+   ~Ctrl-N~ 的字面表达式为 ~?\^字母~ (这里的字母不区分大小写)
+   #+BEGIN_SRC emacs-lisp
+     ?\^I  ; == ?\^i  == C-i == 9
+   #+END_SRC
+
+   还可以表示为 ~?\C-字母~
+   #+BEGIN_SRC emacs-lisp
+     ?\C-g  ;== ?\^g == C-g
+   #+END_SRC
+
+   需要注意的是, ~?\C-G~ 不是 ~?\C-S-g~ 的意思, 它跟 ~?\C-g~ 的意义一样
+
+   由于历史的原因, ~Emacs~ 把 ~<DEL>~ 看成是 ~C-?~
+
+** Meta Character
+   ~M-N~ 的字面表示方式为 ~?\M-字母~
+
+** Shift Character
+   ~S-N~ 的字面表示方式为 ~?\S-N~
+
+** Alt Character
+   ~A-N~ 的字面表示方式为 ~?\A-N~
+
+** Hyper Character
+   ~H-N~ 的字面表示方式为 ~?\H-N~
+
+** Super Character
+   ~s-N~ 的字面表示方式为 ~?\s-N~
+
 
