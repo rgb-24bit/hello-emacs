@@ -26,6 +26,10 @@
   - [[#alt-character][Alt Character]]
   - [[#hyper-character][Hyper Character]]
   - [[#super-character][Super Character]]
+- [[#其他类型][其他类型]]
+- [[#循环结构][循环结构]]
+- [[#数据类型之间的转换][数据类型之间的转换]]
+- [[#类型判断][类型判断]]
 
 * Number
 ** Integer
@@ -272,7 +276,7 @@
      + 函数 ~fboundp~ 可以用于测试符号是否设置了函数
      + 符号的 ~function slot~ 除了存放 ~function~ 外， 还可以存放 ~macro~, ~symbol~, ~keyboard~ ~marcro~, ~keymap~, ~autoload object~
  
-   + 符号的属性列表
+   + 符号的属性列表 ::
      + 函数 ~symbol-plist~ 可以用于获取一个符号的属性列表
      + 可以使用 ~get/put~ 来 *访问/修改* 某个属性值
      + 可以使用 ~plist-get/plist-put~ 来 *访问/设置* 属性列表中的属性
@@ -326,7 +330,7 @@
    #+END_SRC
 
 * Char
-  类似 ~C~, ~Elisp~ 中的 ~Char~ 其实就是 ~integer~ (值从 0 到 (max-char) 的范围都可以认为是 character). ~Char~ 类型的 *字面量结构* 为 ~? 字母~, 例如：
+  类似 ~C~, ~Elisp~ 中的 ~Char~ 其实就是 ~integer~ (值从 0 到 (max-char) 的范围都可以认为是 character). ~Char~ 类型的 *字面量结构* 为 ~?字母~, 例如：
   #+BEGIN_SRC elisp
     (message "%d" ?A)      ; 65
     (message "%d" ?\.)     ; 46 标点一般在前面加 \
@@ -383,4 +387,87 @@
 ** Super Character
    ~s-N~ 的字面表示方式为 ~?\s-N~
 
+* 其他类型
+  + Buffer
+  + Marker
+  + Window
+  + Frame
+  + Terminal
+  + Window Configuration
+  + Frame Configuration
+  + Process
+  + Stream
+    + nil 指 ~standard-input~ 和 ~standard-output~
+    + t 指代从 ~minibuffer~ 输入或输出到 ~echo area~
+  + Keymap
+  + Overlay
+    + Overlay 用来给 buffer 的一部分内容加上不同的显示风格
+  + Font
+
+* 循环结构
+  使用 ~#N=~ 来定义循环点， 使用 ~#N#~ 来引用循环点， ~N~ 为数字：
+  #+BEGIN_SRC elisp
+    '(#1=(a) b #1#)
+    #1='(a #1#)
+  #+END_SRC
+
+* 数据类型之间的转换
+  数据类型转换：
+  #+BEGIN_SRC elisp
+    ;; 数字和字符串之间的转换
+    (number-to-string 10)    ; => "10"
+    (string-to-number "10")  ; => 10
+    (format "%d" 10)         ; => 10
+
+    ;; 序列转换为字符串
+    (concat '(?a ?b ?c ?d ?e))  ; => "abcde"
+    (concat [?a ?b ?c ?d ?e])   ; => "abcde"
+
+    ;; 字符串转换为向量
+    (vconcat "abcde")  ; => [97 98 99 100 101]
+
+    ;; 字符串转列表
+    (append "abcde" nil)  ; => (97 98 99 100 101)
+
+    ;; byte => string
+    (byte-to-string BYTE)
+
+    ;; 对象转换为字符串
+    (format "%s" object)
+    (prin1-to-string object)
+
+    ;; 字符串转换为对象
+    (read-from-string string)
+
+    ;; 符号转换为字符串
+    (symbol-name symbol)
+
+    ;; 字符串转换为符号
+    (intern string)
+  #+END_SRC
+
+  大小写转换：
+  #+BEGIN_SRC elisp
+    (downcase string-or-char)         ; 转换为小写
+    (upcase string-or-char)           ; 转换为大写
+    (capitalize string-or-char)       ; 单词首字母大写
+    (upcase-initials string-or-char)  ; 单词首字母大写
+  #+END_SRC
+
+  *PS:* ~elisp~ 通过 ~case table~ 来确定大小写的对应关系， 每个 ~buffer~ 都可以设置自己的 ~case table~.
+
+  数值类型转换：
+  #+BEGIN_SRC elisp
+    (float number)     ; 转换数字为 Float 型
+    (truncate number)  ; 截断小数位
+    (floor number)     ; 向下取整
+    (ceiling number)   ; 向上取整
+    (round number)     ; 向偶数舍入
+  #+END_SRC
+
+* 类型判断
+  #+BEGIN_SRC elisp
+    (cl-typep object type)  ; 检查 object 是否为 type 类型
+    (type-of object)  ; 返回 object 的基本类型
+  #+END_SRC
 
