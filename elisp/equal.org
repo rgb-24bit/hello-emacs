@@ -1,0 +1,87 @@
+#+TITLE: 等值判断
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#eq][eq]]
+- [[#equal][equal]]
+- [[#][=]]
+- [[#-1][/=]]
+- [[#eql][eql]]
+- [[#char-equal][char-equal]]
+- [[#string][string=]]
+- [[#string-equal][string-equal]]
+- [[#equal-includeing-properties][equal-includeing-properties]]
+
+* eq
+  ~eq~ 用于判断两个 ~Object~ 是否为同一个 ~Object~.
+
+  #+BEGIN_SRC elisp
+    (setq x '(1 2 3))
+    (setq y x)
+
+    (eq x y)         ; => t
+    (eq x '(1 2 3))  ; => nil
+  #+END_SRC
+
+* equal
+  ~equal~ 用于判断两个 ~Object~ 是否有相同的内部结构(这通常意味着两个 ~Object~ 的类型是一样的, 即 ~(equal 0 0.0) => nil~).
+
+  即使两个 ~buffer~ 的内容一样, ~equal~ 这两个 ~buffer~ 时也不相等。
+  
+  由于 ~equal~ 会对两个 ~Object~ 的各个组成部分递归调用 ~equal~, 因此在处理循环结构时, 可能会陷入死循环。
+
+  #+BEGIN_SRC elisp
+    (equal 0 0)    ; => t
+    (equal 0 0.0)  ; => nil
+  #+END_SRC
+
+* =
+  ~=~ 一般用于数字之间的比较， 并且 ~0=0.0~.
+
+  #+BEGIN_SRC elisp
+    (= 0 0)    ; => t
+    (= 0 0.0)  ; => t
+  #+END_SRC
+
+* /=
+  ~/=~ 为数字之间的不等于。
+
+  #+BEGIN_SRC elisp
+    (/= 0 0.0)  ; => nil
+    (/= 1 0)    ; => t
+  #+END_SRC
+
+* eql
+  ~eql~ 类似 ~eq~, 但在处理数字时, 会同时比较数字的类型和值。因此：
+  #+BEGIN_SRC elisp
+    (eql 1.0 1)    ; => nil
+    (eql 1.0 1.0)  ; => t
+  #+END_SRC
+
+* char-equal
+  比较两个 ~character~ 是否相等， 默认忽略大小写差异， 若变量 ~case-fold-search~ 为 ~nil~ (默认为 ~t~), 则在比较时区分大小写。
+
+  #+BEGIN_SRC elisp
+    (char-equal ?x ?x)                      ; => t
+    (let ((case-fold-search nil))
+      (char-equal ?x ?X))                   ; => nil
+  #+END_SRC
+
+* string=
+  ~string=~ 结束 ~string~ 或 ~symbol~ 的参数。 使用 ~string=~ 的时候一定会区分大小写， 更变量 ~case-fold-search~ 无关。 而且在比较时， ~string~ 的 ~text properties~ 不参与比较。
+
+  #+BEGIN_SRC elisp
+    (string= "abc" 'ABC)  ; => nil
+    (string= "abc" 'abc)  ; => t
+  #+END_SRC
+
+* string-equal
+  ~string=~ 的别名。
+
+* equal-includeing-properties
+  类似 ~equal~, 但是会比较 ~string~ 的 ~text properties~.
+
+  #+BEGIN_SRC elisp
+    (equal-including-properties "abs" "abs")  ; => t
+  #+END_SRC
+
