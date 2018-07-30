@@ -1,0 +1,90 @@
+#+TITLE: 推迟代码执行
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#current-prefix-arg][current-prefix-arg]]
+- [[#interactive][interactive]]
+
+* current-prefix-arg
+  ~emacs~ 命令可以通过使用 ~C-u~ 传递 ~universal-argument~, 通过变量 ~current-prefix-arg~ 来
+  获取传递的 ~universal-argument~.
+
+  |--------------------------+-----------------------------|
+  | Key Input                | Value of current-prefix-arg |
+  |--------------------------+-----------------------------|
+  | No universal arg called. | nil                         |
+  | C-u -                    | Symbol -                    |
+  | C-u - 2                  | Number -2                   |
+  | C-u 1                    | Number 1                    |
+  | C-u 4                    | Number 4                    |
+  | C-u                      | List '(4)                   |
+  | C-u C-u                  | List '(16)                  |
+  |--------------------------+-----------------------------|
+
+  通过 ~C-u~ 前缀调用 ~display-prefix~ 输出传递的 ~universal-argument~:
+  #+BEGIN_SRC elisp
+    (defun display-prefix (arg)
+      "Display the value of the raw prefix arg."
+      (interactive "P")
+      (message "%s" arg))
+  #+END_SRC
+
+* interactive
+  定义中包含 ~interactive~ 的函数可以作为可交互调用的 *命令* 使用， 格式为：
+  #+BEGIN_SRC elisp
+    (interactive &optional ARG-DESCRIPTOR)
+  #+END_SRC
+
+  可选参数 ~ARG-DESCRIPTOR~ 有两种形式来表示： *字符串* 和 *表达式*.
+
+  当 ~ARG-DESCRIPTOR~ 是 *字符串* 时， 其一般格式为：
+  #+BEGIN_EXAMPLE
+    代码字符 + 提示字符串(可选)
+  #+END_EXAMPLE
+
+  多个参数使用换行符 ~\n~ 分隔：
+  #+BEGIN_SRC elisp
+    (interactive "P\nbFrobnicate buffer: ")
+  #+END_SRC
+
+  上述代码中存在两个参数： ~P~ 和 ~bFrobnicate buffer:~, 代码字符分别为 ~P~ 和 ~b~, 只有第二个
+  参数才有提示字符串 ~Frobnicate buffer:~.
+
+  常用的 *代码字符* 有：
+  + * :: 如果当前 ~buffer~ 是只读的， 则不执行该函数
+
+  + P :: 接受 ~C-u~ 的数字参数， 如果不用 ~P~, 也可以在代码中判断 ~current-prefix-arg~ 的值
+
+  + r :: ~region~ 的开始/结束位置
+
+  + n :: 提示用户输入数字参数
+
+  + s :: 提示用户输入字符串参数
+
+  所有的代码字符可以查看 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Interactive-Codes.html#Interactive-Codes][官方文档]].
+
+  当 ~ARG-DESCRIPTOR~ 是 *表达式* 时， 这个表达式的求值结果应该是 ~list~, 这个 ~list~ 的值作为参数的实参。
+
+  表达式中常用到如下几个参数用于获取用户输入：
+  #+BEGIN_SRC elisp 
+    ;; Read a string from the minibuffer, prompting with string PROMPT.
+    (read-string "Input name: ")
+
+    ;; Read file name, prompting with PROMPT and completing in directory DIR.
+    (read-file-name "Input file name: ")
+
+    ;; Read directory name, prompting with PROMPT and completing in directory DIR.
+    (read-directory-name "Input directory name: ")
+
+    ;; Read and return a regular expression as a string.
+    (read-regexp "Input regular expression: ")
+
+    ;; Ask user a "y or n" question.
+    (y-or-n-p "Are you ok ?")
+
+    ;; Read a string from the minibuffer, prompting with string PROMPT.
+    (read-from-minibuffer "Input string: ")
+  #+END_SRC
+
+  更多有关 ~interactive~ 的使用可以查阅 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Interactive.html][官方文档]]
+
