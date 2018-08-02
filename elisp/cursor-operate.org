@@ -1,0 +1,75 @@
+#+TITLE: 光标操作
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#获取判断光标位置][获取判断光标位置]]
+- [[#移动光标][移动光标]]
+
+* 获取判断光标位置
+  #+BEGIN_SRC elisp
+    ;; 光标当前位置
+    (point)
+
+    ;; region 的开始和结束位置
+    (region-beginning)
+    (region-end)
+
+    ;; 当前行的开始和结束位置
+    (line-beginning-position)
+    (line-end-position)
+
+    ;; 当前 buffer 的开始和结束位置
+    (point-min)
+    (point-max)
+
+    ;; 得到行号
+    (line-number-at-pos)
+
+    ;; 测试是否在 buffer 头或尾
+    (bobp)  ; beginning of buffer predicate
+    (eobp)  ; end of buffer predicate
+
+    ;; 测试是否在行首或行尾
+    (bolp)  ; beginning of line predicate
+    (eolp)  ; end of line predicate
+  #+END_SRC
+
+* 移动光标
+  #+BEGIN_SRC elisp
+    ;; 跳转到指定位置
+    (goto-char POSITION)
+
+    ;; 按字符数量移动 - 默认为 1
+    (forward-char &optional N)
+    (backward-char &optional N)
+
+    ;; 跳转到指定字符串的位置
+    (search-forward STRING)   ; 光标位于 STRING 的尾部
+    (search-backward STRING)  ; 光标位于 STRING 的头部
+
+    ;; 正则查询
+    (re-search-forward REGEXP)
+    (re-search-backward REGEXP)
+    (search-forward-regexp REGEXP)
+    (search-backward-regexp REGEXP)
+
+    ;; 跳到第一个不是 "a-z" 的位置
+    (skip-chars-forward "a-z")
+    (skip-chars-backward "a-z")
+
+    ;; 跳到 buffer 的开头末尾
+    (beginning-of-buffer)
+    (end-of-buffer)
+
+    ;; 按词数量移动 - 默认为 1
+    (forward-word &optional N)
+    (backward-word &optional N)
+
+    ;; 按行数量移动， 负数向上， 正数向下， 0 到行首
+    (forward-line &optional N)
+
+    ;; 移动到行首行尾
+    (beginning-of-line)
+    (end-of-line)
+  #+END_SRC
+

@@ -8,3 +8,4 @@
 - [[file:equal.org][等值判断]]
 - [[file:name.org][命名风格]]
 - [[file:get-argument.org][获取参数]]
+- [[file:cursor-operate.org][光标操作]]

@@ -1,4 +1,4 @@
-#+TITLE: 推迟代码执行
+#+TITLE: 获取参数
 #+AUTHOR: DarkSun, rgb-24bit
 
 * Table of Contents                                       :TOC_4_gh:noexport:
