@@ -9,3 +9,5 @@
 - [[file:name.org][命名风格]]
 - [[file:get-argument.org][获取参数]]
 - [[file:cursor-operate.org][光标操作]]
+- [[file:control-struct.org][控制结构]]
+- [[file:exception.org][异常机制]]

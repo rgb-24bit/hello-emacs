@@ -1,0 +1,164 @@
+#+TITLE: 控制结构
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#顺序结构][顺序结构]]
+- [[#条件表达式][条件表达式]]
+  - [[#组合条件][组合条件]]
+  - [[#循环][循环]]
+- [[#catch--throw][catch & throw]]
+
+* 顺序结构
+  #+BEGIN_SRC elisp
+    ;; 顺序执行 bodys, bodys 中的最后一个 form 的返回值为 progn 的返回值
+    (progn bodys)
+
+    ;; 类似 progn, 但 form1 的返回值为 prog1 的返回值
+    (prog1 form1 bodys)
+
+    ;; 类似 progn, 但 form2 的返回值为 prog2 的返回值
+    (prog2 form1 form2 bodys)
+  #+END_SRC
+
+  代码示例：
+  #+BEGIN_SRC elisp
+    (prog2
+        (setq num (+ 123 456 789 123456789))  ; form1
+        (setq num (- num 100 100 100000000))  ; form2
+      (message "%d" num)  ; bodys
+      )  ; => 23457957
+  #+END_SRC
+
+* 条件表达式
+  简单的条件表达式：
+  #+BEGIN_SRC elisp
+    ;; then-form 只能是一句 form, 而 else-bodys 可以为多个 form
+    (if condition then-form else-bodys)
+
+    ;; 当 condition 为 t, 执行 bodys
+    (when condition bodys)
+
+    ;; 当 condition 为 nil, 执行 bodys
+    (unless condition bodys)
+
+    ;; 尝试每一个 clause 直到其中一个为 t, clause 的格式为 (condition bodys)
+    (cond clauses)
+    (cond (nil 1) (nil 2) (t 3) (t 4))  ; => 3
+  #+END_SRC
+
+  多分支条件表达式：
+  #+BEGIN_SRC elisp
+    (pcase EXP &rest CASES)
+  #+END_SRC
+
+  ~pcase~ 可以设置不定数量的 ~CASE~, 在获取 ~EXP~ 的值后，使用该值与各个 ~CASE~ 中的 ~UPATTERN~ 
+  进行比较，如果相等，便执行相应的 ~BODYS~.
+
+  比如说：
+  #+BEGIN_SRC elisp
+    (pcase (get-return-code x)
+      ('success       (message "Done!"))
+      ('would-block   (message "Sorry, can't do it now"))
+      ('read-only     (message "The shmliblick is read-only"))
+      ('access-denied (message "You do not have the needed rights"))
+      (code           (message "Unknown return code %S" code)))
+  #+END_SRC
+
+  ~CASE~ 的格式为 ~(UPATTERN bodys)~.
+
+  ~UPATTERN~ 可以是一下几种格式：
+ 	+ `(QPATTERN1 . QPATTERN2) ::
+	     该模式匹配一个 ~cons cell~, 它的 ~car~ 匹配 ~QPATTERN1~, 而 ~cdr~ 匹配 ~QPATTERN2~.
+	   #+BEGIN_SRC emacs-lisp
+         (setq form '(1 . 2))
+         (pcase form
+           (`(,x . ,y) (message "%s + %s = %s" x y (+ x y)))) ;这里 x 绑定为值 1, y 绑定为值 2
+                                                 ; => "1 + 2 = 3"
+	   #+END_SRC
+
+  + `ATOM :: 该模式匹配任何 `equal` ATOM 的 atom
+	  #+BEGIN_SRC emacs-lisp
+        (pcase (get-return-code x)
+          (`success       (message "Done!"))
+          (`would-block   (message "Sorry, can't do it now"))
+          (`read-only     (message "The shmliblick is read-only")) ; 注意, symbol 前需要用反引号引起来
+          (`access-denied (message "You do not have the needed rights"))) ; 这里 access-denied 为 atom, 使用 equal 来进行匹配
+	  #+END_SRC
+
+  + `,UPATTERN :: 该模式匹配任何符合 UPATTERN 的 object, 并会绑定 object 到 UPATTERN 中的变量中
+	  #+BEGIN_SRC emacs-lisp
+        (setq form '(add 1 2))
+        (pcase form
+          (`(add ,x ,y) (message "%s + %s = %s" x y (+ x y)))) ; 这里 x 绑定为值 1, y 绑定为值 2
+        ; => "1 + 2 = 3"
+	  #+END_SRC
+
+  + SYMBOL :: 该模式匹配任何 object, 并且将该 symbol 绑定到 object 上.
+	  #+BEGIN_SRC emacs-lisp
+        (pcase (get-code x)
+          (code (message "code is %s" code)))   ; 这里 code 为一个 symbol, 它的值为 (get-code x) 的结果
+	  #+END_SRC
+
+  + - :: 该模式匹配任何 object, 但与 SYMBOL 不同在于不会将 object 绑定到任何 symbol 上
+
+  + (pred PRED) :: 返回 (PRED object) 的值
+	  #+BEGIN_SRC emacs-lisp
+        (pcase x
+          ((pred numberp) (message "x is number"))
+          ((pred stringp) (message "x is string")))
+	  #+END_SRC
+
+  + (or UPATTERN1 UPATTERN2 ...) :: 任何一个 UPATTERN 匹配都行
+
+  + (and UPATTERN1 UPATTERN2 ...) :: 所有 UPATTERN 都必须匹配
+
+  + (guard EXP) :: 若 EXP 的计算结果为非 nil, 则匹配, 否则不匹配
+
+** 组合条件
+   #+BEGIN_SRC elisp
+     (not (< 1 2))  ; => nil
+     (and (< 1 2) (< 3 4) (< 6 5))  ; => nil
+     (or (< 1 2) (< 3 4) (< 6 5))  ; => nil
+   #+END_SRC
+
+** 循环
+   #+BEGIN_SRC elisp
+     ;; while 循环， 先判断 TEST 的结果， 只要不为 nil, 就循环执行 BODY
+     (while TEST BODY...)
+
+     (let ((x 2))
+       (while (< x 4)
+         (message "X is %s" x)
+         (setq x (1+ x))))
+
+     ;; dolist 循环， 对 list 的每个 element， 绑定到变量 var 中，
+     ;; 然后执行 bodys 中的语句， 最后返回 result 的计算结果 (默认为 nil).
+     (defun reverse (list)
+       (let (value)
+         (dolist (elt list value)
+           (setq value (cons elt value)))))
+
+     ;; dotimes 循环，类似 dolist, 但 var 的取值范围为 [0, count)
+     (dotimes (var 10)
+       (message "Var is %s" var))
+   #+END_SRC
+
+* catch & throw
+  在 ~catch~ 语句中使用 ~throw~ 可以跳转到 ~catch~ 处：
+  #+BEGIN_SRC elisp
+    (defun foo-outer ()
+      (catch 'foo
+        (foo-inner)))
+
+    (defun foo-inner ()
+      (throw 'foo t))
+  #+END_SRC
+
+  ~throw~ 的第一个参数和 ~catch~ 的第一个参数向匹配，第二个参数作为 ~catch~ 的返回值。
+
+  当存在多个 ~catch~ 可被匹配时，则最内层的那个 ~catch~ 被匹配。
+
+  ~throw~ 操作退出多个 ~lisp~ 结构时，就好像正常退出这些 ~lisp~ 结构一样。
+
+  若一个 ~throw~ 的 ~tag~ 没有相应的 ~catch tag~ 来匹配， 则会抛出 ~no-catch~ 错误。错误内容为 ~throw~ 语句中的 ~(tag value)~.
+

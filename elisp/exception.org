@@ -1,0 +1,53 @@
+#+TITLE: 异常机制
+#+AUTHOR: DarkSun, rgb-24bit
+
+* Table of Contents                                       :TOC_4_gh:noexport:
+- [[#error-类型][error 类型]]
+- [[#抛出-error][抛出 error]]
+  - [[#error][error]]
+  - [[#siganl][siganl]]
+
+* error 类型
+  当 ~elisp~ 代码执行遇到错误时可以抛出 ~error~, 这一点类似于其他语言中的 *异常*.
+
+  ~error~ 的类型使用 ~error symbol~ 来标识，每个 ~error~ 有且仅有一个 ~error symbol~.
+
+  ~elisp error~ 的继承体系由 ~error-condition~ 确定，每个 ~error-condition~ 由 ~condition-name~ 来标识，
+  一个 ~error~ 可以属于多个 ~error-condition~.
+
+  理论上， ~error~ 处于 ~error-condition~ 的最顶端，但是 ~quit(C-g)~ 是个例外，
+  ~quit~ 属于一种 ~error-condition~ 但它不是一种 ~error~, 它的父类就是 ~quit~ 自己。
+
+	若要定义自己的 ~error~, 可以使用 ~define-error~ 函数。
+  #+BEGIN_SRC elisp
+    (define-error NAME MESSAGE &optional PARENT)
+  #+END_SRC
+
+  ~NAME~ 指定 ~error-symbol~, ~PARENT~ 指定 ~error-condition~, 默认为 ~error~.
+
+  参数 ~MESSAGE~ 需要是一个字符串，当该 ~error~ 被抛出时，而没有 ~handler~ 捕获时， ~elisp~ 使用该字符串作为 ~error message.~
+
+  例子：
+  #+BEGIN_SRC elisp
+    (define-error 'my-error "One error example.")
+  #+END_SRC
+  
+  ~MESSAGE~ 的第一个字母通常习惯为 *大写*.
+
+* 抛出 error
+  通常可以用三种方式来抛出一个 ~error~, 分别为： ~error~, ~signal~ 和 ~user-error~.
+
+** error
+   #+BEGIN_SRC elisp
+     (error format=-string &rest args)
+   #+END_SRC
+
+   抛出一个 ~error~, 该 ~error~ 的错误说明信息为 ~(format format-string args)~.
+
+** siganl
+   #+BEGIN_SRC elisp
+     (signal ERROR-SYMBOL DATA)
+   #+END_SRC
+
+   抛出一个名为 ~error-symbol~ 的 ~error~, 参数 ~error-symbol~ 必须是由 ~define-error~ 定义的 ~symbol~.
+
